@@ -48,6 +48,10 @@
             crosshair: {
                 mode: LightweightCharts.CrosshairMode.Normal,
             },
+            timeScale: {
+                timeVisible: true,
+                secondsVisible: false,
+            },
         };
         
         const chartContainer = document.getElementById('chartContainer');
@@ -77,64 +81,56 @@
             },
         });
 
-        // Generate Sample Data
-        let data = [];
-        let volumeData = [];
-        let time = new Date(Date.UTC(2025, 0, 1, 0, 0, 0, 0)); // Start from Jan 1, 2025
-        let lastClose = 150;
 
-        for (let i = 0; i < 100; i++) {
-            const open = lastClose + (Math.random() - 0.5) * 4;
-            const close = open + (Math.random() - 0.5) * 4;
-            const high = Math.max(open, close) + Math.random();
-            const low = Math.min(open, close) - Math.random();
-            const volume = Math.floor(Math.random() * 1000000) + 500000;
+        // Fetch Data from API
+        let chartData = [];
+        let chartVolumeData = [];
 
-            // Format date as YYYY-MM-DD
-            const isoString = time.toISOString().split('T')[0];
-            
-            data.push({
-                time: isoString,
-                open: open,
-                high: high,
-                low: low,
-                close: close
-            });
+        fetch('/api/chart-data')
+            .then(response => response.json())
+            .then(responseData => {
+                const toTimestamp = (str) => {
+                    const iso = str.replace(' ', 'T') + 'Z';
+                    const date = new Date(iso);
 
-            volumeData.push({
-                time: isoString,
-                value: volume,
-                color: close >= open ? '#26a69a' : '#ef5350', // Green if up, Red if down
-            });
+                    if (isNaN(date)) {
+                        console.error('Invalid date string:', str);
+                        return null;
+                    }
 
-            lastClose = close;
-            time.setDate(time.getDate() + 1);
-        }
+                    return Math.floor(date.getTime() / 1000);
+                };
 
-        candlestickSeries.setData(data);
-        volumeSeries.setData(volumeData);
+                chartData = responseData.candlestick.map(item => ({
+                    ...item,
+                    time: toTimestamp(item.time)
+                }));
+                
+                chartVolumeData = responseData.volume.map(item => ({
+                    ...item,
+                    time: toTimestamp(item.time)
+                }));
 
-        // Add Example Markers (BUY/SELL Signals)
-        const markers = [
-            {
-                time: data[data.length - 20].time, // 20 days ago
-                position: 'belowBar',
-                color: '#2196F3', // Blue
-                shape: 'arrowUp',
-                text: 'BUY',
-                size: 2
-            },
-            {
-                time: data[data.length - 5].time, // 5 days ago
-                position: 'aboveBar',
-                color: '#e91e63', // Red
-                shape: 'arrowDown',
-                text: 'SELL',
-                size: 2
-            }
-        ];
-        
-        candlestickSeries.setMarkers(markers);
+                const markers = responseData.markers.map(item => ({
+                    ...item,
+                    time: toTimestamp(item.time)
+                }));
+
+                // Ensure data is sorted by time (ascending) just in case
+                chartData.sort((a, b) => a.time - b.time);
+                chartVolumeData.sort((a, b) => a.time - b.time);
+
+                candlestickSeries.setData(chartData);
+                volumeSeries.setData(chartVolumeData);
+                candlestickSeries.setMarkers(markers);
+
+                // Initialize legend with last bar
+                if (chartData.length > 0) {
+                    const lastIndex = chartData.length - 1;
+                    setLegendData(chartData[lastIndex], chartVolumeData[lastIndex].value);
+                }
+            })
+            .catch(error => console.error('Error loading chart data:', error));
 
         chart.timeScale().fitContent();
 
@@ -164,8 +160,7 @@
         }
 
         // Initialize with last bar
-        const lastIndex = data.length - 1;
-        setLegendData(data[lastIndex], volumeData[lastIndex].value);
+
 
         chart.subscribeCrosshairMove(param => {
             if (param.time) {
@@ -175,9 +170,11 @@
                     setLegendData(priceData, volData.value);
                 }
             } else {
-                // Determine if we should clear or keep last known (user preference, keeping last known is often better or reset to latest)
-                // Resetting to latest bar for consistency when mouse leaves
-                setLegendData(data[lastIndex], volumeData[lastIndex].value);
+                // Reset to latest bar
+                if (chartData.length > 0) {
+                    const lastIndex = chartData.length - 1;
+                    setLegendData(chartData[lastIndex], chartVolumeData[lastIndex].value);
+                }
             }
         });
     });
