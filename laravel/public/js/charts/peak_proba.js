@@ -25,4 +25,5 @@ function renderPeakProbaChart(data = null) {
         lineStyle: LightweightCharts.LineStyle.Dashed,
         title: '',
     });
+    return { peakProbaChart, peakProbaSeries };
 }

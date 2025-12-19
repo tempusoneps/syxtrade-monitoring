@@ -45,20 +45,49 @@ function updateReportDetail(time, data) {
     }
 }
 
+const syncVisibleRange = (source, target) => {
+    source.timeScale().subscribeVisibleTimeRangeChange(range => {
+        target.timeScale().setVisibleRange(range);
+    });
+};
+
+// Sync Crosshair
+const syncCrosshair = (source, target, targetSeries, targetData, valueGetter) => {
+    source.subscribeCrosshairMove(param => {
+        if (!param || !param.time) {
+            target.clearCrosshairPosition();
+            return;
+        }
+        const point = targetData.find(d => d.time === param.time);
+        if (point) {
+            target.setCrosshairPosition(valueGetter(point), param.time, targetSeries);
+        } else {
+            target.clearCrosshairPosition();
+        }
+    });
+};
+
 document.addEventListener('DOMContentLoaded', function () {
     fetch('/api/chart-data')
         .then(response => response.json())
         .then(responseData => {
             const candlestickData = prepareCandlestickChartData(responseData.bar_data);
             const peakProbaData = preparePeakProbaData(responseData.bar_data);
+            const volumeData = prepareVolumeData(responseData.bar_data);
             const markers = responseData.markers;
             const { priceChart, candleSeries } = renderCandlestickChart(candlestickData, markers);
-            renderPeakProbaChart(peakProbaData);
+            const { peakProbaChart, peakProbaSeries } = renderPeakProbaChart(peakProbaData);
+            const { volumeChart, volumeSeries } = renderVolumeChart(volumeData);
+            // Sync Visible Range
+            syncVisibleRange(priceChart, peakProbaChart);
+            syncVisibleRange(priceChart, volumeChart);
             priceChart.subscribeClick(param => {
                 if (param.time) {
                     updateReportDetail(param.time, responseData.bar_data);
                 }
             });
+            syncCrosshair(priceChart, peakProbaChart, peakProbaSeries, peakProbaData, d => d.value);
+            syncCrosshair(priceChart, volumeChart, volumeSeries, volumeData, d => d.value);
         })
         .catch(error => console.error('Error fetching chart data:', error));
 });

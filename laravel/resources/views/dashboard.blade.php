@@ -15,6 +15,7 @@
     <!-- Chart Container -->
     <div class="chart-wrapper">
         <div id="candlestickChart" class="chart-container"></div>
+        <div id="volumeChart" style="height:200px;"></div>
         <div id="peakProbaChart" style="height:200px;"></div>
     </div>
 
@@ -30,6 +31,5 @@
 <script src="{{ asset('js/charts/candlestick.js') }}"></script>
 <script src="{{ asset('js/charts/volume.js') }}"></script>
 <script src="{{ asset('js/charts/peak_proba.js') }}"></script>
-<script src="{{ asset('js/charts/rsi.js') }}"></script>
 <script src="{{ asset('js/dashboard.js') }}"></script>
 @endsection
