@@ -1,0 +1,55 @@
+/* Dashboard specific styles */
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    margin: 0;
+}
+
+.btn-logout {
+    background: #ef4444;
+    width: auto;
+}
+
+.chart-wrapper {
+    background: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 1rem;
+}
+
+.chart-container {
+    height: 500px;
+    width: 100%;
+}
+
+
+.legend-wrapper {
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    font-family: 'Inter', monospace;
+    font-size: 0.9rem;
+}
+
+.legend-content {
+    display: flex;
+    gap: 1.5rem;
+    color: #1f2937;
+}
+
+.legend-label {
+    font-weight: 600;
+}
+
+.legend-label.proba {
+    color: #2962FF;
+    margin-left: 1rem;
+}
