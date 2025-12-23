@@ -30,17 +30,75 @@ function formatValue(val, decimals = 2) {
     return val !== undefined && val !== null ? val.toFixed(decimals) : '--';
 }
 
+function formatDate(time) {
+    if (!time) return '--';
+
+    return new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'UTC',
+        day: '2-digit',
+        month: 'short',
+        year: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    }).format(new Date(time * 1000));
+}
+
+function formatProba(val, threshold) {
+    if (val >= threshold) {
+        return `<span class="legend-value proba">${formatValue(val, 4)}</span>`;
+    } else {
+        return `<span class="legend-value">${formatValue(val, 4)}</span>`;
+    }
+}
+
+function formatSignal(signalBar) {
+    if (signalBar.ema_signal || signalBar.couple_cs_signal || signalBar.macd_reverse_signal || signalBar.momentum_signal) {
+        return `<span class="legend-value proba">Yes</span>`;
+    } else {
+        return `<span class="legend-value">No</span>`;
+    }
+}
+
+
+
 function updateReportDetail(time, data) {
     const singleBarData = data.find(d => d.time === time);
     const legend = document.getElementById('report-detail');
     if (singleBarData) {
         legend.innerHTML = `
-            <span style="font-weight: 600;">O</span> ${formatValue(singleBarData.open)}
-            <span style="font-weight: 600;">H</span> ${formatValue(singleBarData.high)}
-            <span style="font-weight: 600;">L</span> ${formatValue(singleBarData.low)}
-            <span style="font-weight: 600;">C</span> ${formatValue(singleBarData.close)}
-            <span style="font-weight: 600;">V</span> ${Math.round(singleBarData.volume).toLocaleString()}
-            <span style="font-weight: 600; color: #2962FF; margin-left: 1rem;">Peak Proba</span> ${formatValue(singleBarData.daily_peak_proba, 4)}
+            <div class="legend-item">
+                <span class="legend-label">Time</span>
+                <span class="legend-value" data-val=${singleBarData.time}>${formatDate(singleBarData.time)}</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-label">Open</span>
+                <span class="legend-value">${formatValue(singleBarData.open)}</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-label">High</span>
+                <span class="legend-value">${formatValue(singleBarData.high)}</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-label">Low</span>
+                <span class="legend-value">${formatValue(singleBarData.low)}</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-label">Close</span>
+                <span class="legend-value">${formatValue(singleBarData.close)}</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-label">Volume</span>
+                <span class="legend-value">${Math.round(singleBarData.volume).toLocaleString()}</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-label">Signal</span>
+                ${formatSignal(singleBarData)}
+            </div>
+            <div class="legend-item">
+                <span class="legend-label">Peak Proba</span>
+                ${formatProba(singleBarData.daily_peak_proba, singleBarData.peak_proba_threshold)}
+            </div>
         `;
     }
 }
@@ -88,6 +146,22 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             syncCrosshair(priceChart, peakProbaChart, peakProbaSeries, peakProbaData, d => d.value);
             syncCrosshair(priceChart, volumeChart, volumeSeries, volumeData, d => d.value);
+
+            // Initialize legend with last data
+            if (candlestickData.length > 0) {
+                const lastData = responseData.bar_data[responseData.bar_data.length - 1];
+                updateReportDetail(lastData.time, responseData.bar_data);
+            }
         })
         .catch(error => console.error('Error fetching chart data:', error));
 });
+
+
+// Auto-refresh
+setInterval(function () {
+    const now = new Date();
+    const hours = now.getHours();
+    if (hours >= 9 && hours < 15) {
+        window.location.reload();
+    }
+}, 300000);

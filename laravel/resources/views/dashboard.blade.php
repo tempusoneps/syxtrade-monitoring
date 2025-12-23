@@ -12,16 +12,18 @@
         </form>
     </div>
 
-    <!-- Chart Container -->
-    <div class="chart-wrapper">
-        <div id="candlestickChart" class="chart-container"></div>
-        <div id="volumeChart" style="height:200px;"></div>
-        <div id="peakProbaChart" style="height:200px;"></div>
-    </div>
+    <div class="dashboard-content">
+        <!-- Chart Container -->
+        <div class="chart-wrapper">
+            <div id="candlestickChart" class="chart-container"></div>
+            <div id="volumeChart" style="height:200px;"></div>
+            <div id="peakProbaChart" style="height:200px;"></div>
+        </div>
 
-    <div class="legend-wrapper">
-        <div id="report-detail" class="legend-content">
-            <span>--</span>
+        <div class="legend-wrapper">
+            <div id="report-detail" class="legend-content">
+                <span>--</span>
+            </div>
         </div>
     </div>
 </div>

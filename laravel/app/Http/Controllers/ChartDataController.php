@@ -34,6 +34,11 @@ class ChartDataController extends Controller
                 'volume' => (float)$signal->volume,
                 'color' => $signal->close >= $signal->open ? '#26a69a' : '#ef5350',
                 'daily_peak_proba' => (float)$signal->daily_peak_proba,
+                'peak_proba_threshold' => (float)$signal->daily_peak_proba_threshold,
+                'ema_signal' => $signal->ema_signal,
+                'couple_cs_signal' => $signal->couple_cs_signal,
+                'macd_reverse_signal' => $signal->macd_reverse_signal,
+                'momentum_signal' => $signal->momentum_signal,
             ];
 
             // Example Marker Logic based on available signals
